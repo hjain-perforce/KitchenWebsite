@@ -42,8 +42,8 @@ echo.
 echo Press Ctrl+C to stop the server
 echo.
 
-REM Start Python HTTP server in background
-start /b python -m http.server !PORT!
+REM Wait for server to start (launch in background)
+start /min python -m http.server !PORT!
 
 REM Wait for server to start
 timeout /t 2 /nobreak >nul
@@ -51,5 +51,7 @@ timeout /t 2 /nobreak >nul
 REM Open browser
 start "" http://localhost:!PORT!/templates/Kitchen.html
 
-REM Keep console open and wait
+REM Server runs in minimized window; Ctrl+C or closing this window will terminate it
+echo.
+echo Server is running. Close this window or press Ctrl+C to stop.
 pause >nul

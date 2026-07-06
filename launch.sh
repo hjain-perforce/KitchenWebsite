@@ -84,10 +84,12 @@ $PYTHON_CMD -m http.server $PORT &
 SERVER_PID=$!
 
 # Trap Ctrl+C for graceful shutdown
-trap 'echo -e "\n${YELLOW}Shutting down server...${NC}"; kill $SERVER_PID 2>/dev/null; exit 0' INT TERM
+trap 'echo -e "\n${YELLOW}Shutting down server...${NC}"; kill $SERVER_PID 2>/dev/null; wait $SERVER_PID 2>/dev/null; exit 0' INT TERM
 
 # Open browser after server starts
 open_browser "http://localhost:$PORT/templates/Kitchen.html"
 
-# Wait for server process
-wait $SERVER_PID
+# Keep script alive (trap will handle Ctrl+C)
+while kill -0 $SERVER_PID 2>/dev/null; do
+    sleep 1
+done
