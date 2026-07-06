@@ -32,21 +32,67 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
+# Function to check if a port is listening
+check_port_listening() {
+    local port=$1
+    if command -v lsof &> /dev/null; then
+        lsof -i:$port -sTCP:LISTEN &> /dev/null
+        return $?
+    elif command -v ss &> /dev/null; then
+        ss -ln | grep -q ":$port "
+        return $?
+    elif command -v netstat &> /dev/null; then
+        # Use word boundaries to match exact port number
+        netstat -an | awk '{print $4}' | grep -q ":$port$"
+        return $?
+    else
+        # Fallback: try to connect to the port
+        (echo > /dev/tcp/localhost/$port) &> /dev/null
+        return $?
+    fi
+}
+
 # Function to try starting server on a port
 try_start_server() {
     local port=$1
-    # Try to start the server and capture any error
-    python3 -m http.server $port 2>&1 &
+    local error_file=$(mktemp)
+
+    # Try to start the server and capture stderr
+    python3 -m http.server $port > /dev/null 2>$error_file &
     local server_pid=$!
 
-    # Give it a moment to fail if port is in use
-    sleep 0.5
+    # Give it a moment to bind to the port or fail
+    sleep 1
 
-    # Check if the process is still running
+    # Check if the process is still running AND the port is actually listening
     if kill -0 $server_pid 2>/dev/null; then
-        echo $server_pid
-        return 0
+        # Process exists, but is it actually serving?
+        if check_port_listening $port; then
+            rm -f $error_file
+            echo $server_pid
+            return 0
+        else
+            # Process exists but port not listening - check for error
+            if grep -q "Address already in use" $error_file 2>/dev/null; then
+                kill $server_pid 2>/dev/null
+                rm -f $error_file
+                return 1
+            fi
+            # Give it a bit more time
+            sleep 0.5
+            if check_port_listening $port; then
+                rm -f $error_file
+                echo $server_pid
+                return 0
+            else
+                kill $server_pid 2>/dev/null
+                rm -f $error_file
+                return 1
+            fi
+        fi
     else
+        # Process already died
+        rm -f $error_file
         return 1
     fi
 }
