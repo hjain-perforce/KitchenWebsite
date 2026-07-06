@@ -38,8 +38,8 @@ start /B python -m http.server %PORT%
 REM Wait for server to start
 timeout /t 2 /nobreak >nul
 
-REM Check if server is running by testing the connection
-curl -s http://localhost:%PORT% >nul 2>&1
+REM Check if server is running by testing the connection using PowerShell
+powershell -Command "(Invoke-WebRequest -Uri http://localhost:%PORT% -UseBasicParsing).StatusCode" >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo Error: Failed to start server on port %PORT%
     echo The port may already be in use. Try a different port or stop the conflicting service.
