@@ -52,11 +52,7 @@ The launch scripts automatically:
 If you prefer to start the server manually:
 
 ```bash
-# Python 3
 python3 -m http.server 8000
-
-# Python 2
-python -m SimpleHTTPServer 8000
 ```
 
 Then navigate to: http://localhost:8000/templates/Kitchen.html

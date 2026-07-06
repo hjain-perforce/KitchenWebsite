@@ -4,6 +4,9 @@ REM Starts a local HTTP server and opens the app in your default browser
 
 setlocal enabledelayedexpansion
 
+REM Change to script directory to ensure correct paths
+cd /d "%~dp0"
+
 REM Check if Python is available
 where python >nul 2>nul
 if %errorlevel% neq 0 (
@@ -16,9 +19,9 @@ if %errorlevel% neq 0 (
 REM Function to check if a port is available
 set PORT=8000
 :check_port
-netstat -an | find ":%PORT%" | find "LISTENING" >nul
+netstat -an | find ":!PORT! " | find "LISTENING" >nul
 if %errorlevel% equ 0 (
-    echo Port %PORT% is already in use, trying next port...
+    echo Port !PORT! is already in use, trying next port...
     set /a PORT+=1
     if !PORT! gtr 8100 (
         echo Error: Could not find an available port between 8000-8100
@@ -33,14 +36,20 @@ echo ========================================
 echo    KitchenWebsite Local Server
 echo ========================================
 echo.
-echo Server starting on port %PORT%...
-echo URL: http://localhost:%PORT%/templates/Kitchen.html
+echo Server starting on port !PORT!...
+echo URL: http://localhost:!PORT!/templates/Kitchen.html
 echo.
 echo Press Ctrl+C to stop the server
 echo.
 
-REM Start the server in background and open browser
-start "" http://localhost:%PORT%/templates/Kitchen.html
+REM Start Python HTTP server in background
+start /b python -m http.server !PORT!
 
-REM Start Python HTTP server
-python -m http.server %PORT%
+REM Wait for server to start
+timeout /t 2 /nobreak >nul
+
+REM Open browser
+start "" http://localhost:!PORT!/templates/Kitchen.html
+
+REM Keep console open and wait
+pause >nul

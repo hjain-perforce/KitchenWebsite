@@ -3,7 +3,8 @@
 # KitchenWebsite Launch Script
 # Starts a local HTTP server and opens the app in your default browser
 
-set -e
+# Change to script directory to ensure correct paths
+cd "$(dirname "$0")"
 
 # Color codes for output
 GREEN='\033[0;32m'
@@ -39,6 +40,7 @@ check_port() {
 
 # Find an available port starting from 8000
 PORT=8000
+set +e  # Disable exit on error for port checking
 while ! check_port $PORT; do
     echo -e "${YELLOW}Port $PORT is already in use, trying next port...${NC}"
     PORT=$((PORT + 1))
@@ -47,6 +49,7 @@ while ! check_port $PORT; do
         exit 1
     fi
 done
+set -e  # Re-enable exit on error
 
 # Display welcome message
 echo -e "${GREEN}========================================${NC}"
@@ -62,7 +65,7 @@ echo ""
 # Function to open browser
 open_browser() {
     local url=$1
-    sleep 1  # Give server a moment to start
+    sleep 2  # Give server a moment to start
 
     if command -v xdg-open &> /dev/null; then
         xdg-open "$url" &> /dev/null &
@@ -76,11 +79,15 @@ open_browser() {
     fi
 }
 
+# Start the server in background
+$PYTHON_CMD -m http.server $PORT &
+SERVER_PID=$!
+
 # Trap Ctrl+C for graceful shutdown
-trap 'echo -e "\n${YELLOW}Shutting down server...${NC}"; exit 0' INT TERM
+trap 'echo -e "\n${YELLOW}Shutting down server...${NC}"; kill $SERVER_PID 2>/dev/null; exit 0' INT TERM
 
-# Open browser in background
-open_browser "http://localhost:$PORT/templates/Kitchen.html" &
+# Open browser after server starts
+open_browser "http://localhost:$PORT/templates/Kitchen.html"
 
-# Start the server
-$PYTHON_CMD -m http.server $PORT
+# Wait for server process
+wait $SERVER_PID
