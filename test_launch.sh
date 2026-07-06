@@ -1,19 +1,23 @@
 #!/bin/bash
 # Simple test to verify launch scripts are valid and project structure is correct
 
-set -e
-
 echo "Running KitchenWebsite launch script tests..."
 echo ""
 
-# Test 1: Check Python availability
-echo "Test 1: Checking Python availability..."
-if command -v python3 &> /dev/null || command -v python &> /dev/null; then
-    echo "✓ Python is available"
+# Determine which Python command to use
+if command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+elif command -v python &> /dev/null; then
+    PYTHON_CMD="python"
 else
+    echo "Test 1: Checking Python availability..."
     echo "✗ Python not found"
     exit 1
 fi
+
+# Test 1: Check Python availability
+echo "Test 1: Checking Python availability..."
+echo "✓ Python is available ($PYTHON_CMD)"
 
 # Test 2: Check launch.sh syntax
 echo "Test 2: Validating launch.sh syntax..."
@@ -69,7 +73,7 @@ fi
 
 # Test 8: Test HTTP server can start briefly
 echo "Test 8: Testing HTTP server functionality..."
-python3 -m http.server 8765 > /dev/null 2>&1 &
+$PYTHON_CMD -m http.server 8765 > /dev/null 2>&1 &
 SERVER_PID=$!
 sleep 2
 
