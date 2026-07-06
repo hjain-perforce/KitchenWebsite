@@ -28,7 +28,7 @@ python --version
 echo Starting HTTP server on port %PORT%...
 echo Server URL: http://localhost:%PORT%
 echo.
-echo Press Ctrl+C to stop the server
+echo Close this window to stop the server
 echo ========================================
 echo.
 
@@ -54,6 +54,7 @@ echo.
 REM Open browser
 start "" "%URL%"
 
-REM Wait indefinitely (server runs in background)
-echo Server is running. Press Ctrl+C to stop.
-pause >nul
+REM Keep window open (server runs in background)
+echo Server is running. Close this window to stop.
+echo.
+pause

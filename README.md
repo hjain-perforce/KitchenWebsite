@@ -31,22 +31,18 @@ Or simply double-click the `launch.bat` file in Windows Explorer.
 ### What the Launch Script Does
 
 1. Checks for Python installation
-2. Verifies that port 8000 is available
-3. Starts a local HTTP server on `http://localhost:8000`
+2. Starts a local HTTP server on `http://localhost:8000`
+3. Verifies that the server launched successfully
 4. Automatically opens your default browser to the Kitchen Website
 5. Displays server logs in the console
-6. Allows graceful shutdown with `Ctrl+C`
+6. Allows graceful shutdown with `Ctrl+C` (Unix/Linux/macOS) or closing the window (Windows)
 
 ### Manual Launch (Alternative)
 
 If you prefer to start the server manually:
 
 ```bash
-# Using Python 3
 python3 -m http.server 8000
-
-# Or using Python 2
-python -m SimpleHTTPServer 8000
 ```
 
 Then open your browser to: [http://localhost:8000/templates/Kitchen.html](http://localhost:8000/templates/Kitchen.html)

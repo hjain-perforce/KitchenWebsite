@@ -41,8 +41,8 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Start the HTTP server in background
-$PYTHON_CMD -m http.server $PORT &
+# Start the HTTP server in background (stderr visible to user)
+$PYTHON_CMD -m http.server $PORT 2>&1 &
 SERVER_PID=$!
 
 # Wait for server to start
