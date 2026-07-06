@@ -25,25 +25,35 @@ if %ERRORLEVEL% NEQ 0 (
 echo Using: Python
 python --version
 
-REM Check if port is already in use
-netstat -ano | findstr ":%PORT%" | findstr "LISTENING" >nul 2>&1
-if %ERRORLEVEL% EQU 0 (
-    echo Error: Port %PORT% is already in use
-    echo Please stop the service using port %PORT% or modify the PORT variable in this script
-    pause
-    exit /b 1
-)
-
 echo Starting HTTP server on port %PORT%...
 echo Server URL: http://localhost:%PORT%
-echo Opening browser to: %URL%
 echo.
 echo Press Ctrl+C to stop the server
 echo ========================================
 echo.
 
+REM Start the HTTP server in background
+start /B python -m http.server %PORT%
+
+REM Wait for server to start
+timeout /t 2 /nobreak >nul
+
+REM Check if server is running by testing the connection
+curl -s http://localhost:%PORT% >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    echo Error: Failed to start server on port %PORT%
+    echo The port may already be in use. Try a different port or stop the conflicting service.
+    pause
+    exit /b 1
+)
+
+echo Server started successfully!
+echo Opening browser to: %URL%
+echo.
+
 REM Open browser
 start "" "%URL%"
 
-REM Start the HTTP server
-python -m http.server %PORT%
+REM Wait indefinitely (server runs in background)
+echo Server is running. Press Ctrl+C to stop.
+pause >nul

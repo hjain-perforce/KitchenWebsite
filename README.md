@@ -102,9 +102,9 @@ KitchenWebsite/
 │   ├── services.html  # Services page
 │   └── contacts.html  # Contact page
 ├── css/               # Stylesheets
-│   └── style.css
+│   └── kitchen_styles.css
 └── images/            # Image assets
-    └── background.png
+    └── *.jpg          # Various food and logo images
 ```
 
 ## Navigation

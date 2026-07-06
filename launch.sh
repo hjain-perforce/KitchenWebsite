@@ -3,8 +3,6 @@
 # Kitchen Website Launch Script
 # Starts a local HTTP server and opens the application in the default browser
 
-set -e
-
 PORT=8000
 URL="http://localhost:$PORT/templates/Kitchen.html"
 
@@ -26,16 +24,8 @@ fi
 
 echo "Using: $PYTHON_CMD"
 
-# Check if port is already in use
-if lsof -Pi :$PORT -sTCP:LISTEN -t >/dev/null 2>&1 ; then
-    echo "Error: Port $PORT is already in use"
-    echo "Please stop the service using port $PORT or modify the PORT variable in this script"
-    exit 1
-fi
-
 echo "Starting HTTP server on port $PORT..."
 echo "Server URL: http://localhost:$PORT"
-echo "Opening browser to: $URL"
 echo ""
 echo "Press Ctrl+C to stop the server"
 echo "========================================"
@@ -45,12 +35,31 @@ echo ""
 cleanup() {
     echo ""
     echo "Shutting down server..."
+    kill $SERVER_PID 2>/dev/null
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM
 
-# Open browser (cross-platform approach)
+# Start the HTTP server in background
+$PYTHON_CMD -m http.server $PORT &
+SERVER_PID=$!
+
+# Wait for server to start
+sleep 2
+
+# Check if server started successfully
+if ! kill -0 $SERVER_PID 2>/dev/null; then
+    echo "Error: Failed to start server on port $PORT"
+    echo "The port may already be in use. Try a different port or stop the conflicting service."
+    exit 1
+fi
+
+echo "Server started successfully!"
+echo "Opening browser to: $URL"
+echo ""
+
+# Open browser (cross-platform approach) - optional, don't fail if it doesn't work
 if [[ "$OSTYPE" == "darwin"* ]]; then
     # macOS
     open "$URL" 2>/dev/null || true
@@ -62,5 +71,5 @@ elif [[ "$OSTYPE" == "cygwin" ]] || [[ "$OSTYPE" == "msys" ]]; then
     start "$URL" 2>/dev/null || true
 fi
 
-# Start the HTTP server
-$PYTHON_CMD -m http.server $PORT
+# Wait for server process
+wait $SERVER_PID
