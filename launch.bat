@@ -51,7 +51,6 @@ timeout /t 2 /nobreak >nul
 REM Open browser
 start "" http://localhost:!PORT!/templates/Kitchen.html
 
-REM Server runs in minimized window; Ctrl+C or closing this window will terminate it
+REM Server runs in minimized window
 echo.
-echo Server is running. Close this window or press Ctrl+C to stop.
-pause >nul
+echo Server is running in minimized window. Close that window to stop.
