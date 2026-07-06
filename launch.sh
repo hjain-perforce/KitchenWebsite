@@ -19,49 +19,6 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Find an available port
-check_port() {
-    # Try multiple methods to check if port is in use
-    if command -v nc &> /dev/null; then
-        nc -z localhost $1 2>/dev/null
-        return $?
-    elif command -v lsof &> /dev/null; then
-        lsof -i:$1 &> /dev/null
-        return $?
-    elif command -v netstat &> /dev/null; then
-        netstat -an | grep -q ":$1.*LISTEN"
-        return $?
-    else
-        # If no port-checking tool is available, assume port is free
-        return 1
-    fi
-}
-
-ORIGINAL_PORT=$PORT
-while [ $PORT -le $MAX_PORT ]; do
-    if ! check_port $PORT; then
-        break
-    fi
-    echo "Port $PORT is already in use, trying $((PORT + 1))..."
-    PORT=$((PORT + 1))
-done
-
-if [ $PORT -gt $MAX_PORT ]; then
-    echo "ERROR: Could not find an available port between $ORIGINAL_PORT and $MAX_PORT"
-    echo "Please close some applications and try again."
-    echo ""
-    exit 1
-fi
-
-URL="http://localhost:$PORT"
-
-echo "Starting local HTTP server..."
-echo "Server URL: $URL"
-echo ""
-echo "Press Ctrl+C to stop the server"
-echo "======================================"
-echo ""
-
 # Function to handle cleanup on exit
 cleanup() {
     echo ""
@@ -75,16 +32,69 @@ cleanup() {
 
 trap cleanup SIGINT SIGTERM
 
-# Open the browser (cross-platform approach)
-if command -v xdg-open &> /dev/null; then
-    xdg-open "$URL" &> /dev/null &
-elif command -v open &> /dev/null; then
-    open "$URL" &> /dev/null &
-elif command -v start &> /dev/null; then
-    start "$URL" &> /dev/null &
-else
-    echo "Could not auto-open browser. Please navigate to: $URL"
-fi
+# Function to try starting server on a port
+try_start_server() {
+    local port=$1
+    # Try to start the server and capture any error
+    python3 -m http.server $port 2>&1 &
+    local server_pid=$!
 
-# Start the Python HTTP server
-python3 -m http.server $PORT
+    # Give it a moment to fail if port is in use
+    sleep 0.5
+
+    # Check if the process is still running
+    if kill -0 $server_pid 2>/dev/null; then
+        echo $server_pid
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Find an available port and start the server
+ORIGINAL_PORT=$PORT
+SERVER_PID=""
+
+while [ $PORT -le $MAX_PORT ]; do
+    echo "Attempting to start server on port $PORT..."
+
+    if SERVER_PID=$(try_start_server $PORT); then
+        # Server started successfully
+        URL="http://localhost:$PORT"
+        echo ""
+        echo "======================================"
+        echo "Server started successfully!"
+        echo "Server URL: $URL"
+        echo ""
+        echo "Press Ctrl+C to stop the server"
+        echo "======================================"
+        echo ""
+
+        # Give the server a moment to be ready
+        sleep 1
+
+        # Open the browser (cross-platform approach)
+        if command -v xdg-open &> /dev/null; then
+            xdg-open "$URL" &> /dev/null &
+        elif command -v open &> /dev/null; then
+            open "$URL" &> /dev/null &
+        elif command -v start &> /dev/null; then
+            start "$URL" &> /dev/null &
+        else
+            echo "Could not auto-open browser. Please navigate to: $URL"
+        fi
+
+        # Wait for the server process
+        wait $SERVER_PID
+        exit 0
+    else
+        echo "Port $PORT is already in use, trying next port..."
+        PORT=$((PORT + 1))
+    fi
+done
+
+echo ""
+echo "ERROR: Could not find an available port between $ORIGINAL_PORT and $MAX_PORT"
+echo "Please close some applications and try again."
+echo ""
+exit 1

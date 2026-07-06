@@ -44,6 +44,8 @@ python -m http.server 8000
 
 Then open your browser and navigate to `http://localhost:8000`
 
+**Note:** If port 8000 is already in use, Python will show an error like "Address already in use". In that case, try a different port (e.g., `python3 -m http.server 8001`) and navigate to that port in your browser instead.
+
 ## Project Structure
 
 ```

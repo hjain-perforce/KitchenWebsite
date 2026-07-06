@@ -21,10 +21,21 @@ IF ERRORLEVEL 1 (
 )
 
 :FIND_PORT
-REM Check if port is available
-netstat -an | find ":%PORT%" | find "LISTENING" >nul
-IF NOT ERRORLEVEL 1 (
+echo Attempting to start server on port %PORT%...
+
+REM Try to start the server
+start /B python -m http.server %PORT% >nul 2>&1
+
+REM Give it a moment to fail if port is in use
+timeout /t 1 /nobreak >nul
+
+REM Check if python server is running on this port
+netstat -an | findstr /C:":%PORT% " | findstr "LISTENING" >nul
+IF ERRORLEVEL 1 (
+    REM Port is not listening, which means server failed to start
     echo Port %PORT% is already in use, trying next port...
+    REM Kill any python process we just started
+    taskkill /F /FI "IMAGENAME eq python.exe" /FI "COMMANDLINE eq *http.server %PORT%*" >nul 2>&1
     SET /A PORT+=1
     IF %PORT% LEQ %MAX_PORT% (
         goto FIND_PORT
@@ -39,15 +50,21 @@ IF NOT ERRORLEVEL 1 (
 
 SET URL=http://localhost:%PORT%
 
-echo Starting local HTTP server...
+echo.
+echo ======================================
+echo Server started successfully!
 echo Server URL: %URL%
 echo.
 echo Press Ctrl+C to stop the server
 echo ======================================
 echo.
 
+REM Give the server a moment to be fully ready
+timeout /t 1 /nobreak >nul
+
 REM Open the browser
 start "" "%URL%"
 
-REM Start the Python HTTP server
-python -m http.server %PORT%
+REM The server is already running in background, wait for user to press Ctrl+C
+echo Server is running. Close this window or press Ctrl+C to stop.
+pause >nul
