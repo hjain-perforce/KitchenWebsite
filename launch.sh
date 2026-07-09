@@ -107,4 +107,4 @@ done
 
 # If we reach here, server has exited (possibly due to error)
 echo "Server process has terminated."
-cleanup
+exit 0

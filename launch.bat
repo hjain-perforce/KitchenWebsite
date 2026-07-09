@@ -48,7 +48,7 @@ set /a ATTEMPTS=0
 :wait_loop
 if %ATTEMPTS% GEQ 20 goto server_timeout
 timeout /t 1 /nobreak >nul
-netstat -an | findstr ":%PORT% " >nul 2>&1
+netstat -an | findstr ":%PORT%" >nul 2>&1
 if errorlevel 1 (
     set /a ATTEMPTS+=1
     goto wait_loop
